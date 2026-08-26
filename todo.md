@@ -1,0 +1,23 @@
+# Project TODO
+
+- [x] Create an elegant, responsive Furrio visual system and primary navigation using the exact section names Home, Explore, and Profile.
+- [x] Define and apply the database schema for creator profiles, image-based posts, hashtags, comments, likes, follows, and persistent member relationships.
+- [x] Build protected service procedures for profile reading and editing, publishing, feeds, discovery, likes, comments, follows, and hashtag exploration.
+- [x] Add selected-hashtag exploration and explicit invalid-target validation for social interactions.
+- [x] Build the Home community feed with post creation, image publishing, likes, comments, follows, and responsive loading and empty states.
+- [x] Build Explore with popular image posts, hashtags, and creator discovery.
+- [x] Build Profile with a public identity header, editable profile photo, display name, fursona name, bio, follow state, and post grid.
+- [x] Integrate durable external media storage for avatar and post-image uploads.
+- [x] Add user-visible upload failure feedback and validate media upload ownership protections.
+- [x] Implement Auth0-backed onboarding code with persistent sessions and a verification gate limited to new database registrations.
+- [x] Configure Auth0 Google and Apple identity provider connections, confirmed by the project owner.
+- [x] Add Auth0 client integration for persistent email/password, Google, and Apple sessions.
+- [x] Build a Furrio-branded sign-in and join interface that routes securely into the configured Auth0 flows.
+- [x] Configure Auth0 registration email verification, confirmed by the project owner.
+- [x] Validate Auth0 credential configuration and document allowed callback, logout, and web-origin URLs.
+- [x] Add and run Vitest coverage for social service rules and media ownership behavior.
+- [x] Add focused Vitest coverage for like, comment, follow, and invalid-target interaction procedures.
+- [x] Add successful profile-update procedure coverage, including ownership-safe avatar persistence.
+- [x] Verify visual polish and the public Home, Explore, Profile, publishing, and discovery experiences.
+- [ ] Exercise live Auth0 database signup, verified returning sign-in, Google sign-in, and Apple sign-in with interactive provider accounts.
+- [ ] Save a completed project checkpoint and provide delivery and authentication setup notes.
