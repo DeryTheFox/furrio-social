@@ -29,7 +29,7 @@ function AuthenticatedApp() {
     // interrupted attempt leaves only `state` in the address bar, remove it
     // once initialization has settled so the app does not keep looking like a
     // callback page on refresh.
-    if (!isLoading && !error) {
+    if (!isLoading) {
       const url = new URL(window.location.href);
       const hasCode = url.searchParams.has("code");
       const hasStaleAuthParams = url.searchParams.has("state") || url.searchParams.has("error");
