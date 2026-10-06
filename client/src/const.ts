@@ -2,6 +2,10 @@ import { OAUTH_STATE_COOKIE, encodeOAuthState } from "@shared/const";
 
 export { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
 
+// Use the published origin for Auth0 so temporary preview hostnames cannot
+// invalidate the callback allowlist between preview sessions.
+export const FURRIO_ORIGIN = "https://furrisociety-qubyqb6h.manus.space";
+
 // Start the Manus OAuth login. Call this from an event handler or effect at the
 // moment you want to navigate, e.g. `onClick={() => startLogin()}`.
 //

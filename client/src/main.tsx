@@ -6,6 +6,7 @@ import { createRoot } from "react-dom/client";
 import { useEffect, useMemo, useState } from "react";
 import superjson from "superjson";
 import App from "./App";
+import { FURRIO_ORIGIN } from "./const";
 import "./index.css";
 
 const queryClient = new QueryClient();
@@ -80,10 +81,10 @@ createRoot(document.getElementById("root")!).render(
     clientId={auth0ClientId}
     cacheLocation="localstorage"
     onRedirectCallback={() => {
-      window.history.replaceState({}, document.title, window.location.pathname);
+      window.location.replace(FURRIO_ORIGIN);
     }}
     authorizationParams={{
-      redirect_uri: window.location.origin,
+      redirect_uri: FURRIO_ORIGIN,
       audience: import.meta.env.VITE_AUTH0_AUDIENCE,
       scope: "openid profile email",
     }}
