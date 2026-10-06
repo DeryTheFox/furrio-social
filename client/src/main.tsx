@@ -23,6 +23,21 @@ function AuthenticatedApp() {
     const timer = window.setTimeout(() => setLoadingTooLong(true), 12_000);
     return () => window.clearTimeout(timer);
   }, [isLoading]);
+
+  useEffect(() => {
+    // Auth0 consumes valid `code` + `state` callbacks itself. If a failed or
+    // interrupted attempt leaves only `state` in the address bar, remove it
+    // once initialization has settled so the app does not keep looking like a
+    // callback page on refresh.
+    if (!isLoading && !error) {
+      const url = new URL(window.location.href);
+      const hasCode = url.searchParams.has("code");
+      const hasStaleAuthParams = url.searchParams.has("state") || url.searchParams.has("error");
+      if (!hasCode && hasStaleAuthParams) {
+        window.history.replaceState({}, document.title, url.pathname + url.hash);
+      }
+    }
+  }, [error, isLoading]);
   const trpcClient = useMemo(
     () => trpc.createClient({
       links: [
