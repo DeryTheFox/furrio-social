@@ -49,6 +49,17 @@ function parseImageDataUrl(dataUrl: string) {
   return { data, contentType: match[1], extension };
 }
 
+function parseVideoDataUrl(dataUrl: string) {
+  const match = dataUrl.match(/^data:(video\/(?:mp4|webm|quicktime));base64,([a-zA-Z0-9+/=]+)$/);
+  if (!match) throw new TRPCError({ code: "BAD_REQUEST", message: "Upload an MP4, WebM, or MOV video." });
+  const data = Buffer.from(match[2], "base64");
+  if (data.length === 0 || data.length > 25 * 1024 * 1024) {
+    throw new TRPCError({ code: "PAYLOAD_TOO_LARGE", message: "Videos must be smaller than 25 MB." });
+  }
+  const extension = match[1] === "video/quicktime" ? "mov" : match[1].slice("video/".length);
+  return { data, contentType: match[1], extension };
+}
+
 export function ownsMediaKey(userId: number, purpose: "avatar" | "post", key: string) {
   return key.startsWith(`furrio/${userId}/${purpose}/`);
 }
@@ -77,6 +88,14 @@ export const appRouter = router({
         const key = `furrio/${ctx.user.id}/${input.purpose}/${nanoid()}.${image.extension}`;
         const uploaded = await storagePut(key, image.data, image.contentType);
         return { key: uploaded.key, url: uploaded.url };
+      }),
+    uploadPostMedia: protectedProcedure
+      .input(z.object({ dataUrl: z.string().max(36_000_000), mediaType: z.enum(["image", "video"]) }))
+      .mutation(async ({ ctx, input }) => {
+        const media = input.mediaType === "image" ? parseImageDataUrl(input.dataUrl) : parseVideoDataUrl(input.dataUrl);
+        const key = `furrio/${ctx.user.id}/post/${nanoid()}.${media.extension}`;
+        const uploaded = await storagePut(key, media.data, media.contentType);
+        return { key: uploaded.key, url: uploaded.url, mediaType: input.mediaType };
       }),
   }),
   social: router({
@@ -141,14 +160,20 @@ export const appRouter = router({
       return saved[0]!;
     }),
     createPost: protectedProcedure
-      .input(z.object({ imageUrl: z.string().min(1).max(500), imageKey: z.string().min(1).max(255), caption: z.string().trim().max(2_000) }))
+      .input(z.object({ mediaType: z.enum(["text", "image", "video"]), imageUrl: z.string().max(500).nullable(), imageKey: z.string().max(255).nullable(), caption: z.string().trim().max(2_000) }))
       .mutation(async ({ ctx, input }) => {
-        if (!ownsMediaKey(ctx.user.id, "post", input.imageKey)) {
-          throw new TRPCError({ code: "FORBIDDEN", message: "Use an image uploaded from your own account." });
+        if (input.mediaType === "text" && !input.caption) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Write something before publishing a text post." });
+        }
+        if (input.mediaType !== "text" && (!input.imageUrl || !input.imageKey)) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Add media before publishing this post." });
+        }
+        if (input.mediaType !== "text" && !ownsMediaKey(ctx.user.id, "post", input.imageKey!)) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "Use media uploaded from your own account." });
         }
         const db = await requireDb();
         await ensureProfile(ctx.user);
-        const created = await db.insert(posts).values({ authorId: ctx.user.id, imageUrl: input.imageUrl, imageKey: input.imageKey, caption: input.caption || null });
+        const created = await db.insert(posts).values({ authorId: ctx.user.id, mediaType: input.mediaType, imageUrl: input.imageUrl, imageKey: input.imageKey, caption: input.caption || null });
         const postId = Number(created[0].insertId);
         const tagNames = extractHashtags(input.caption);
         for (const tagName of tagNames) {

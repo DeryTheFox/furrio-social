@@ -23,6 +23,7 @@ import {
   Sparkles,
   UserRound,
   UsersRound,
+  Video,
   X,
 } from "lucide-react";
 import { ChangeEvent, FormEvent, useEffect, useState } from "react";
@@ -44,8 +45,9 @@ type CreatorProfile = {
 
 type FurrioPost = {
   id: number;
-  imageUrl: string;
-  imageKey: string;
+  mediaType: "text" | "image" | "video";
+  imageUrl: string | null;
+  imageKey: string | null;
   caption: string | null;
   createdAt: Date | string;
   tags: string[];
@@ -181,9 +183,9 @@ function PostCard({ post, isAuthenticated, onLogin, onTag, onProfile }: { post: 
         </button>
         <button className="icon-button" aria-label="More post options"><MoreHorizontal size={19} /></button>
       </div>
-      <div className="post-card__media">
-        <img src={post.imageUrl} alt={post.caption || `Artwork by ${post.author.displayName}`} />
-      </div>
+      {post.mediaType === "image" && post.imageUrl && <div className="post-card__media"><img src={post.imageUrl} alt={post.caption || `Artwork by ${post.author.displayName}`} /></div>}
+      {post.mediaType === "video" && post.imageUrl && <div className="post-card__media"><video src={post.imageUrl} controls playsInline preload="metadata" aria-label={post.caption || `Video by ${post.author.displayName}`} /></div>}
+      {post.mediaType === "text" && <div className="post-card__text"><Feather size={20} /><p>{post.caption}</p></div>}
       <div className="post-card__actions">
         <button className={post.likedByViewer ? "reaction-button reaction-button--liked" : "reaction-button"} onClick={() => (isAuthenticated ? like.mutate({ postId: post.id }) : onLogin())} disabled={like.isPending} aria-label="Like post">
           <Heart size={20} fill={post.likedByViewer ? "currentColor" : "none"} />
@@ -193,7 +195,7 @@ function PostCard({ post, isAuthenticated, onLogin, onTag, onProfile }: { post: 
         <button className="reaction-button reaction-button--share" onClick={() => toast.message("Sharing controls are being prepared for Furrio.")} aria-label="Share post"><Send size={19} /></button>
         <button className="reaction-button reaction-button--share" onClick={() => toast.message("Saved collections are coming soon.")} aria-label="Save post"><Bookmark size={19} /></button>
       </div>
-      {(post.caption || post.tags.length > 0) && <div className="post-card__copy">
+      {(post.mediaType !== "text" && (post.caption || post.tags.length > 0)) && <div className="post-card__copy">
         {post.caption && <p><button onClick={() => onProfile(post.author.handle)}>{post.author.displayName}</button>{" "}{post.caption}</p>}
         {post.tags.length > 0 && <div className="tag-row">{post.tags.map(tag => <button key={tag} onClick={() => onTag(tag)}>#{tag}</button>)}</div>}
       </div>}
@@ -221,28 +223,37 @@ function PostCard({ post, isAuthenticated, onLogin, onTag, onProfile }: { post: 
 
 function Composer({ isAuthenticated, onLogin }: { isAuthenticated: boolean; onLogin: () => void }) {
   const [open, setOpen] = useState(false);
+  const [postType, setPostType] = useState<"text" | "image" | "video">("image");
   const [caption, setCaption] = useState("");
   const [preview, setPreview] = useState<string | null>(null);
   const [fileData, setFileData] = useState<string | null>(null);
   const utils = trpc.useUtils();
-  const upload = trpc.media.uploadImage.useMutation({ onError: error => toast.error(error.message) });
+  const upload = trpc.media.uploadPostMedia.useMutation({ onError: error => toast.error(error.message) });
   const create = trpc.social.createPost.useMutation({
     onSuccess: () => {
       setOpen(false);
+      setPostType("image");
       setCaption("");
       setPreview(null);
       setFileData(null);
       utils.social.home.invalidate();
       utils.social.explore.invalidate();
       utils.social.mine.invalidate();
-      toast.success("Your creation is now part of Furrio.");
+      utils.social.profile.invalidate();
+      toast.success("Your post is now part of Furrio.");
     },
     onError: error => toast.error(error.message),
   });
+  const chooseType = (nextType: "text" | "image" | "video") => {
+    setPostType(nextType);
+    setPreview(null);
+    setFileData(null);
+  };
   const handleFile = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    if (file.size > 4 * 1024 * 1024) return toast.error("Choose an image smaller than 4 MB.");
+    const maxBytes = postType === "video" ? 25 * 1024 * 1024 : 4 * 1024 * 1024;
+    if (file.size > maxBytes) return toast.error(postType === "video" ? "Choose a video smaller than 25 MB." : "Choose an image smaller than 4 MB.");
     const reader = new FileReader();
     reader.onload = () => {
       const data = String(reader.result || "");
@@ -254,25 +265,34 @@ function Composer({ isAuthenticated, onLogin }: { isAuthenticated: boolean; onLo
   const publish = async (event: FormEvent) => {
     event.preventDefault();
     if (!isAuthenticated) return onLogin();
-    if (!fileData) return toast.error("Add an image to continue.");
+    if (postType === "text") {
+      if (!caption.trim()) return toast.error("Write something before publishing.");
+      return create.mutate({ mediaType: "text", imageUrl: null, imageKey: null, caption: caption.trim() });
+    }
+    if (!fileData) return toast.error(postType === "video" ? "Add a video to continue." : "Add an image to continue.");
     try {
-      const uploaded = await upload.mutateAsync({ dataUrl: fileData, purpose: "post" });
-      await create.mutateAsync({ imageUrl: uploaded.url, imageKey: uploaded.key, caption });
+      const uploaded = await upload.mutateAsync({ dataUrl: fileData, mediaType: postType });
+      await create.mutateAsync({ mediaType: postType, imageUrl: uploaded.url, imageKey: uploaded.key, caption: caption.trim() });
     } catch {
       // The mutation shows a user-facing error toast.
     }
   };
   return <>
-    <button className="compose-cta" onClick={() => (isAuthenticated ? setOpen(true) : onLogin())}><span><ImagePlus size={19} /></span><span><strong>Share a creation</strong><small>Bring your next piece into the pack</small></span><ChevronRight size={18} /></button>
+    <button className="compose-cta" onClick={() => (isAuthenticated ? setOpen(true) : onLogin())}><span><ImagePlus size={19} /></span><span><strong>Share a creation</strong><small>Post a thought, image, or video</small></span><ChevronRight size={18} /></button>
     {open && <div className="modal-layer" role="dialog" aria-modal="true" aria-label="Create a post">
       <form className="compose-modal" onSubmit={publish}>
-        <div className="drawer-heading"><div><span className="eyebrow">New creation</span><h2>Share something vivid</h2></div><button className="icon-button" type="button" onClick={() => setOpen(false)} aria-label="Close post composer"><X size={20} /></button></div>
-        <label className={`upload-well ${preview ? "upload-well--filled" : ""}`}>
-          {preview ? <img src={preview} alt="Selected post preview" /> : <><ImagePlus size={30} /><strong>Choose a visual to share</strong><span>PNG, JPEG, or WebP · up to 4 MB</span></>}
-          <input type="file" accept="image/png,image/jpeg,image/webp" onChange={handleFile} />
-        </label>
-        <label className="field-label">Caption<textarea value={caption} onChange={event => setCaption(event.target.value)} maxLength={2000} placeholder="What would you like the community to know? Add tags like #art or #fursona." /></label>
-        <div className="compose-modal__footer"><span>Public to the Furrio community</span><button className="primary-button" type="submit" disabled={upload.isPending || create.isPending}>{upload.isPending || create.isPending ? "Publishing…" : "Publish creation"}<ArrowUpRight size={17} /></button></div>
+        <div className="drawer-heading"><div><span className="eyebrow">New post</span><h2>Share something vivid</h2></div><button className="icon-button" type="button" onClick={() => setOpen(false)} aria-label="Close post composer"><X size={20} /></button></div>
+        <div className="composer-tabs" role="tablist" aria-label="Post type">
+          <button type="button" role="tab" aria-selected={postType === "text"} className={postType === "text" ? "composer-tab composer-tab--active" : "composer-tab"} onClick={() => chooseType("text")}><Feather size={16} /> Text</button>
+          <button type="button" role="tab" aria-selected={postType === "image"} className={postType === "image" ? "composer-tab composer-tab--active" : "composer-tab"} onClick={() => chooseType("image")}><ImagePlus size={16} /> Image</button>
+          <button type="button" role="tab" aria-selected={postType === "video"} className={postType === "video" ? "composer-tab composer-tab--active" : "composer-tab"} onClick={() => chooseType("video")}><Video size={16} /> Video</button>
+        </div>
+        {postType === "text" ? <div className="text-post-well"><Feather size={24} /><strong>Give the community a thought to carry</strong><span>Text posts can include hashtags like #art or #fursona.</span></div> : <label className={`upload-well ${preview ? "upload-well--filled" : ""}`}>
+          {preview && postType === "video" ? <video src={preview} controls muted playsInline aria-label="Selected video preview" /> : preview ? <img src={preview} alt="Selected post preview" /> : <><>{postType === "video" ? <Video size={30} /> : <ImagePlus size={30} />}</><strong>{postType === "video" ? "Choose a video to share" : "Choose an image to share"}</strong><span>{postType === "video" ? "MP4, WebM, or MOV · up to 25 MB" : "PNG, JPEG, or WebP · up to 4 MB"}</span></>}
+          <input key={postType} type="file" accept={postType === "video" ? "video/mp4,video/webm,video/quicktime" : "image/png,image/jpeg,image/webp"} onChange={handleFile} />
+        </label>}
+        <label className="field-label">{postType === "text" ? "Your post" : "Caption"}<textarea value={caption} onChange={event => setCaption(event.target.value)} maxLength={2000} placeholder={postType === "text" ? "What is on your mind?" : "Add a few words or tags like #art or #fursona."} /></label>
+        <div className="compose-modal__footer"><span>Public to the Furrio community</span><button className="primary-button" type="submit" disabled={upload.isPending || create.isPending}>{upload.isPending || create.isPending ? "Publishing…" : "Publish post"}<ArrowUpRight size={17} /></button></div>
       </form>
     </div>}
   </>;
@@ -381,7 +401,7 @@ function ProfileView({ isAuthenticated, onLogin, handle, onBack, onTag, onProfil
   if (profileQuery.isLoading) return <><header className="page-heading"><div><span className="eyebrow">Public identity</span><h1>Profile</h1></div></header><LoadingTile rows={6} /></>;
   if (profileQuery.isError) return <div className="auth-empty"><span className="empty-state__mark"><PawPrint size={22} /></span><span className="eyebrow">Profile unavailable</span><h1>We couldn’t load this corner of Furrio.</h1><p>{profileQuery.error.message || "Please try again in a moment."}</p><button className="primary-button" onClick={() => profileQuery.refetch()}>Try again <ArrowUpRight size={17} /></button></div>;
   if (!profile) return <div className="auth-empty"><span className="empty-state__mark"><PawPrint size={22} /></span><span className="eyebrow">Profile unavailable</span><h1>This profile is not ready yet.</h1><p>Try refreshing the profile or return to Home.</p><button className="primary-button" onClick={() => profileQuery.refetch()}>Refresh profile <ArrowUpRight size={17} /></button></div>;
-  return <><header className="page-heading">{handle ? <button className="back-link" onClick={onBack}><ArrowLeft size={17} />Back to your profile</button> : <div><span className="eyebrow">Account profile</span><h1>Your profile</h1><p>Shape the identity and creative presence you share with Furrio.</p></div>}</header><section className="profile-hero"><div className="profile-hero__ambient" /><div className="profile-hero__top"><Avatar src={profile.avatarUrl} label={profile.displayName} size="xl" /><div className="profile-hero__actions">{owner ? <button className="secondary-button" onClick={() => setEditing(true)}><Settings2 size={16} />Edit account profile</button> : publicCreator && <FollowButton creator={publicCreator} isAuthenticated={isAuthenticated} onLogin={onLogin} />}</div></div><div className="profile-hero__identity"><span className="eyebrow">{profile.isCreator ? "Creator profile" : "Furrio member"}</span><h2>{profile.displayName}</h2><p className="profile-handle">@{profile.handle}{profile.fursonaName && <><i>·</i>{profile.fursonaName}</>}</p><p className="profile-bio">{profile.bio || "This member is shaping their corner of Furrio."}</p></div><div className="profile-stats"><span><strong>{formatCount(posts.length)}</strong> creations</span><span><strong>{formatCount(followerCount)}</strong> followers</span><span><strong>{formatCount(followingCount)}</strong> following</span></div></section><section className="profile-posts"><div className="section-header"><div><span className="eyebrow">Visual archive</span><h2>{owner ? "Your creations" : `${profile.displayName}'s creations`}</h2></div>{owner && <span className="post-count">{posts.length} published</span>}</div>{posts.length ? <div className="post-grid">{posts.map(post => <article className="post-grid__item" key={post.id}><img src={post.imageUrl} alt={post.caption || `Artwork by ${profile.displayName}`} /><div><Heart size={15} fill="currentColor" />{formatCount(post.likeCount)}<MessageCircle size={15} />{formatCount(post.commentCount)}</div></article>)}</div> : <EmptyState title={owner ? "Your archive is ready" : "No public creations yet"} body={owner ? "Your posted images will form a rich visual archive here." : "When this member shares a creation, it will appear in their public archive."} />}</section>{editing && <EditProfile profile={profile} onClose={() => setEditing(false)} />}</>;
+  return <><header className="page-heading">{handle ? <button className="back-link" onClick={onBack}><ArrowLeft size={17} />Back to your profile</button> : <div><span className="eyebrow">Account profile</span><h1>Your profile</h1><p>Shape the identity and creative presence you share with Furrio.</p></div>}</header><section className="profile-hero"><div className="profile-hero__ambient" /><div className="profile-hero__top"><Avatar src={profile.avatarUrl} label={profile.displayName} size="xl" /><div className="profile-hero__actions">{owner ? <button className="secondary-button" onClick={() => setEditing(true)}><Settings2 size={16} />Edit account profile</button> : publicCreator && <FollowButton creator={publicCreator} isAuthenticated={isAuthenticated} onLogin={onLogin} />}</div></div><div className="profile-hero__identity"><span className="eyebrow">{profile.isCreator ? "Creator profile" : "Furrio member"}</span><h2>{profile.displayName}</h2><p className="profile-handle">@{profile.handle}{profile.fursonaName && <><i>·</i>{profile.fursonaName}</>}</p><p className="profile-bio">{profile.bio || "This member is shaping their corner of Furrio."}</p></div><div className="profile-stats"><span><strong>{formatCount(posts.length)}</strong> creations</span><span><strong>{formatCount(followerCount)}</strong> followers</span><span><strong>{formatCount(followingCount)}</strong> following</span></div></section><section className="profile-posts"><div className="section-header"><div><span className="eyebrow">Visual archive</span><h2>{owner ? "Your creations" : `${profile.displayName}'s creations`}</h2></div>{owner && <span className="post-count">{posts.length} published</span>}</div>{posts.length ? <div className="post-grid">{posts.map(post => <article className="post-grid__item" key={post.id}>{post.mediaType === "image" && post.imageUrl ? <img src={post.imageUrl} alt={post.caption || `Artwork by ${profile.displayName}`} /> : post.mediaType === "video" && post.imageUrl ? <video src={post.imageUrl} muted playsInline preload="metadata" aria-label={post.caption || `Video by ${profile.displayName}`} /> : <div className="post-grid__text"><Feather size={20} /><span>{post.caption}</span></div>}<div><Heart size={15} fill="currentColor" />{formatCount(post.likeCount)}<MessageCircle size={15} />{formatCount(post.commentCount)}</div></article>)}</div> : <EmptyState title={owner ? "Your archive is ready" : "No public creations yet"} body={owner ? "Your posts will form a rich archive here." : "When this member shares a post, it will appear in their public archive."} />}</section>{editing && <EditProfile profile={profile} onClose={() => setEditing(false)} />}</>;
 }
 
 export default function FurrioApp() {

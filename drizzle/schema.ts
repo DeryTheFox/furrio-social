@@ -48,8 +48,9 @@ export const posts = mysqlTable(
     authorId: int("authorId")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
-    imageUrl: text("imageUrl").notNull(),
-    imageKey: varchar("imageKey", { length: 255 }).notNull(),
+    mediaType: mysqlEnum("mediaType", ["text", "image", "video"]).default("text").notNull(),
+    imageUrl: text("imageUrl"),
+    imageKey: varchar("imageKey", { length: 255 }),
     caption: text("caption"),
     visibility: mysqlEnum("visibility", ["public"]).default("public").notNull(),
     createdAt: timestamp("createdAt").defaultNow().notNull(),
