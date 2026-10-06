@@ -17,13 +17,12 @@ async function authenticateAuth0Request(req: CreateExpressContextOptions["req"])
   const token = authorization?.startsWith("Bearer ") ? authorization.slice(7) : null;
   const domain = process.env.VITE_AUTH0_DOMAIN;
   const clientId = process.env.VITE_AUTH0_CLIENT_ID;
-  const audience = process.env.VITE_AUTH0_AUDIENCE;
-  if (!token || !domain || !clientId || !audience) return null;
+  if (!token || !domain || !clientId) return null;
 
   try {
     const issuer = `https://${domain}/`;
     auth0Jwks ??= createRemoteJWKSet(new URL(`${issuer}.well-known/jwks.json`));
-    const accessResult = await jwtVerify(token, auth0Jwks, { issuer, audience });
+    const accessResult = await jwtVerify(token, auth0Jwks, { issuer, audience: clientId });
     const rawIdentity = req.headers["x-furrio-identity"];
     const identityToken = typeof rawIdentity === "string" ? rawIdentity : null;
     let identityClaims = accessResult.payload;

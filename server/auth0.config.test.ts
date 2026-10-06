@@ -18,10 +18,8 @@ describe("Auth0 client configuration", () => {
     expect(document.authorization_endpoint).toContain(`https://${domain}/authorize`);
   }, 15_000);
 
-  it("uses a dedicated HTTPS API identifier rather than the Auth0 Management API", () => {
+  it("does not use the Auth0 Management API as an application audience", () => {
     const audience = process.env.VITE_AUTH0_AUDIENCE;
-    expect(audience).toBe("https://api.furrio.app");
-    expect(audience).toMatch(/^https:\/\/[a-z0-9.-]+(?:\/[a-z0-9._~:/?#[\]@!$&'()*+,;=-]*)?$/i);
-    expect(audience).not.toContain("/api/v2/");
+    if (audience) expect(audience).not.toContain("/api/v2/");
   });
 });

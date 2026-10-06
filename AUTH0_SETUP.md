@@ -1,6 +1,6 @@
 # Auth0 Setup for Furrio
 
-Furrio uses an **Auth0 Single Page Web Application** for persistent browser sessions and a dedicated **Furrio API** audience for protected social requests. The browser receives an Auth0 access token for the Furrio API and an ID token for member identity; the server verifies both against the Auth0 tenant’s OpenID Connect keys before allowing protected actions.
+Furrio uses an **Auth0 Single Page Web Application** for persistent browser sessions. The browser sends the verified Auth0 ID token for member identity; the server verifies it against the Auth0 tenant’s OpenID Connect keys before allowing protected actions.
 
 | Setting | Current preview value | Production value |
 |---|---|---|
@@ -8,9 +8,9 @@ Furrio uses an **Auth0 Single Page Web Application** for persistent browser sess
 | Allowed Callback URLs | `https://3000-itqxi3se9fynvgle8pdrv-35966b9e.us1.manus.computer` and `https://furrisociety-qubyqb6h.manus.space` | Add the published Furrio origin, without a trailing slash. |
 | Allowed Logout URLs | `https://3000-itqxi3se9fynvgle8pdrv-35966b9e.us1.manus.computer` and `https://furrisociety-qubyqb6h.manus.space` | Add the published Furrio origin, without a trailing slash. |
 | Allowed Web Origins | `https://3000-itqxi3se9fynvgle8pdrv-35966b9e.us1.manus.computer` and `https://furrisociety-qubyqb6h.manus.space` | Add the published Furrio origin, without a trailing slash. |
-| API Identifier | `https://api.furrio.app` | Keep this identifier stable. |
+| API Identifier | Not required | Do not request a custom API audience unless that API is created in the Auth0 tenant. |
 
-> **Do not use** Auth0’s Management API identifier (`https://YOUR_TENANT.auth0.com/api/v2/`) as the Furrio browser audience. It grants management-oriented access and is not the dedicated API Furrio uses for community actions.
+> **Important:** Do not configure or request `https://api.furrio.app` unless you have created an Auth0 API with that exact identifier. A missing identifier produces `Service not found`. Also do not use Auth0’s Management API identifier (`https://YOUR_TENANT.auth0.com/api/v2/`) as a browser audience.
 
 In the Auth0 Dashboard, enable **Username-Password-Authentication**, **Google**, and **Apple** for the Furrio SPA. Auth0 sends a verification email for new database-account registrations by default. Furrio’s server additionally rejects protected activity from an `auth0|…` database identity until the verified-email claim is present, while returning verified members can sign in normally without a fresh verification request. Social identities are handled through Auth0’s connection flows.
 

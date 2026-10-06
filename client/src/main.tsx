@@ -12,7 +12,7 @@ import "./index.css";
 const queryClient = new QueryClient();
 
 function AuthenticatedApp() {
-  const { error, getAccessTokenSilently, getIdTokenClaims, isAuthenticated, isLoading, loginWithRedirect } = useAuth0();
+  const { error, getIdTokenClaims, isAuthenticated, isLoading, loginWithRedirect } = useAuth0();
   const [loadingTooLong, setLoadingTooLong] = useState(false);
 
   useEffect(() => {
@@ -32,13 +32,11 @@ function AuthenticatedApp() {
           headers: async () => {
             if (!isAuthenticated) return {};
             try {
-              const [accessToken, identityClaims] = await Promise.all([
-                getAccessTokenSilently({ authorizationParams: { audience: import.meta.env.VITE_AUTH0_AUDIENCE } }),
-                getIdTokenClaims(),
-              ]);
+              const identityClaims = await getIdTokenClaims();
+              if (!identityClaims?.__raw) return {};
               return {
-                Authorization: `Bearer ${accessToken}`,
-                ...(identityClaims?.__raw ? { "X-Furrio-Identity": identityClaims.__raw } : {}),
+                Authorization: `Bearer ${identityClaims.__raw}`,
+                "X-Furrio-Identity": identityClaims.__raw,
               };
             } catch {
               // Public procedures should remain usable when Auth0 needs a fresh session.
@@ -52,7 +50,7 @@ function AuthenticatedApp() {
         }),
       ],
     }),
-    [getAccessTokenSilently, getIdTokenClaims, isAuthenticated],
+    [getIdTokenClaims, isAuthenticated],
   );
 
   if (error || loadingTooLong) {
@@ -85,7 +83,6 @@ createRoot(document.getElementById("root")!).render(
     }}
     authorizationParams={{
       redirect_uri: FURRIO_ORIGIN,
-      audience: import.meta.env.VITE_AUTH0_AUDIENCE,
       scope: "openid profile email",
     }}
   >
