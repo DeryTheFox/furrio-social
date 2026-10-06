@@ -6,6 +6,9 @@ export { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
 // invalidate the callback allowlist between preview sessions.
 export const FURRIO_ORIGIN = "https://furrisociety-qubyqb6h.manus.space";
 
+export const getAuth0RedirectOrigin = () =>
+  window.location.hostname.endsWith(".manus.computer") ? FURRIO_ORIGIN : window.location.origin;
+
 // Start the Manus OAuth login. Call this from an event handler or effect at the
 // moment you want to navigate, e.g. `onClick={() => startLogin()}`.
 //

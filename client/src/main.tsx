@@ -6,7 +6,7 @@ import { createRoot } from "react-dom/client";
 import { useEffect, useMemo, useState } from "react";
 import superjson from "superjson";
 import App from "./App";
-import { FURRIO_ORIGIN } from "./const";
+import { getAuth0RedirectOrigin } from "./const";
 import "./index.css";
 
 const queryClient = new QueryClient();
@@ -97,7 +97,7 @@ createRoot(document.getElementById("root")!).render(
       window.history.replaceState({}, document.title, window.location.pathname);
     }}
     authorizationParams={{
-      redirect_uri: FURRIO_ORIGIN,
+      redirect_uri: getAuth0RedirectOrigin(),
       scope: "openid profile email",
     }}
   >
