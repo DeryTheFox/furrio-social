@@ -121,3 +121,9 @@ button:active { transform: scale(.97); }
   .compose-cta__tools { padding-left: 6px; }
   .compose-tool { width: 30px; height: 34px; }
 }
+
+.compose-cta__input { min-width: 0; flex: 1; height: 38px; border: 0; outline: 0; padding: 0 4px; color: #332d28; background: transparent; font: 600 14px "Inter", system-ui, sans-serif; }
+.compose-cta__input::placeholder { color: #726960; opacity: 1; }
+.compose-cta__input:focus::placeholder { color: #a65340; }
+.compose-cta:focus-within { border-color: #c87a64; box-shadow: 0 8px 26px rgba(68, 51, 40, .08); }
+@media (max-width: 500px) { .compose-cta__input { font-size: 12px; } }
