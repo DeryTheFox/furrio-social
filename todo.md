@@ -20,4 +20,4 @@
 - [x] Add successful profile-update procedure coverage, including ownership-safe avatar persistence.
 - [x] Verify visual polish and the public Home, Explore, Profile, publishing, and discovery experiences.
 - [ ] Exercise live Auth0 database signup, verified returning sign-in, Google sign-in, and Apple sign-in with interactive provider accounts.
-- [ ] Save a completed project checkpoint and provide delivery and authentication setup notes.
+- [x] Save a completed project checkpoint and provide delivery and authentication setup notes.
