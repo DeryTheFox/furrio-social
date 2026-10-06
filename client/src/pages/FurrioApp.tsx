@@ -25,7 +25,7 @@ import {
   Video,
   X,
 } from "lucide-react";
-import { ChangeEvent, FormEvent, useEffect, useState } from "react";
+import { ChangeEvent, FormEvent, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { FURRIO_ORIGIN, getAuth0RedirectOrigin, isPreviewOrigin } from "@/const";
 
@@ -221,21 +221,17 @@ function PostCard({ post, isAuthenticated, onLogin, onTag, onProfile }: { post: 
 }
 
 function Composer({ isAuthenticated, onLogin }: { isAuthenticated: boolean; onLogin: () => void }) {
-  const [open, setOpen] = useState(false);
-  const [postType, setPostType] = useState<"text" | "image" | "video">("image");
-  const [caption, setCaption] = useState("");
+  const [postType, setPostType] = useState<"text" | "image" | "video">("text");
   const [inlineText, setInlineText] = useState("");
-  const [preview, setPreview] = useState<string | null>(null);
   const [fileData, setFileData] = useState<string | null>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
   const utils = trpc.useUtils();
   const upload = trpc.media.uploadPostMedia.useMutation({ onError: error => toast.error(error.message) });
   const create = trpc.social.createPost.useMutation({
     onSuccess: () => {
-      setOpen(false);
-      setPostType("image");
-      setCaption("");
+      setPostType("text");
       setInlineText("");
-      setPreview(null);
       setFileData(null);
       utils.social.home.invalidate();
       utils.social.explore.invalidate();
@@ -245,16 +241,11 @@ function Composer({ isAuthenticated, onLogin }: { isAuthenticated: boolean; onLo
     },
     onError: error => toast.error(error.message),
   });
-  const openComposer = (type: "text" | "image" | "video", initialText = "") => {
+  const startMedia = (type: "image" | "video") => {
     if (!isAuthenticated) return onLogin();
     setPostType(type);
-    if (type === "text" && initialText) setCaption(initialText);
-    setOpen(true);
-  };
-  const chooseType = (nextType: "text" | "image" | "video") => {
-    setPostType(nextType);
-    setPreview(null);
     setFileData(null);
+    (type === "image" ? imageInputRef : videoInputRef).current?.click();
   };
   const handleFile = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -262,47 +253,35 @@ function Composer({ isAuthenticated, onLogin }: { isAuthenticated: boolean; onLo
     const maxBytes = postType === "video" ? 25 * 1024 * 1024 : 4 * 1024 * 1024;
     if (file.size > maxBytes) return toast.error(postType === "video" ? "Choose a video smaller than 25 MB." : "Choose an image smaller than 4 MB.");
     const reader = new FileReader();
-    reader.onload = () => {
-      const data = String(reader.result || "");
-      setFileData(data);
-      setPreview(data);
-    };
+    reader.onload = () => setFileData(String(reader.result || ""));
     reader.readAsDataURL(file);
   };
-  const publish = async (event: FormEvent) => {
-    event.preventDefault();
+  const publish = async () => {
     if (!isAuthenticated) return onLogin();
+    const caption = inlineText.trim();
     if (postType === "text") {
-      if (!caption.trim()) return toast.error("Write something before publishing.");
-      return create.mutate({ mediaType: "text", imageUrl: null, imageKey: null, caption: caption.trim() });
+      if (!caption) return toast.error("Write something before publishing.");
+      return create.mutate({ mediaType: "text", imageUrl: null, imageKey: null, caption });
     }
-    if (!fileData) return toast.error(postType === "video" ? "Add a video to continue." : "Add an image to continue.");
+    if (!fileData) return toast.error(postType === "video" ? "Choose a video first." : "Choose an image first.");
     try {
       const uploaded = await upload.mutateAsync({ dataUrl: fileData, mediaType: postType });
-      await create.mutateAsync({ mediaType: postType, imageUrl: uploaded.url, imageKey: uploaded.key, caption: caption.trim() });
+      await create.mutateAsync({ mediaType: postType, imageUrl: uploaded.url, imageKey: uploaded.key, caption });
     } catch {
       // The mutation shows a user-facing error toast.
     }
   };
-  return <>
-    <div className="compose-cta" role="region" aria-label="Create a Furrio post"><span className="compose-cta__avatar" aria-hidden="true"><Feather size={18} /></span><input className="compose-cta__input" type="text" value={inlineText} placeholder="Share something with the community…" onChange={event => setInlineText(event.target.value)} onKeyDown={event => { if (event.key === "Enter" && inlineText.trim()) { event.preventDefault(); openComposer("text", inlineText.trim()); } }} aria-label="Share something with the community" /><div className="compose-cta__tools" aria-label="Post tools"><button type="button" className="compose-tool compose-tool--post" onClick={() => openComposer("text", inlineText.trim())} aria-label="Create a post" title="Post"><Send size={16} /><span>Post</span></button><button type="button" className="compose-tool" onClick={() => openComposer("image")} aria-label="Create an image post" title="Image post"><ImagePlus size={17} /></button><button type="button" className="compose-tool" onClick={() => openComposer("video")} aria-label="Create a video post" title="Video post"><Video size={17} /></button></div></div>
-    {open && <div className="modal-layer" role="dialog" aria-modal="true" aria-label="Create a post">
-      <form className="compose-modal" onSubmit={publish}>
-        <div className="drawer-heading"><div><span className="eyebrow">New post</span><h2>Share something vivid</h2></div><button className="icon-button" type="button" onClick={() => setOpen(false)} aria-label="Close post composer"><X size={20} /></button></div>
-        <div className="composer-tabs" role="tablist" aria-label="Post type">
-          <button type="button" role="tab" aria-selected={postType === "text"} className={postType === "text" ? "composer-tab composer-tab--active" : "composer-tab"} onClick={() => chooseType("text")}><Feather size={16} /> Text</button>
-          <button type="button" role="tab" aria-selected={postType === "image"} className={postType === "image" ? "composer-tab composer-tab--active" : "composer-tab"} onClick={() => chooseType("image")}><ImagePlus size={16} /> Image</button>
-          <button type="button" role="tab" aria-selected={postType === "video"} className={postType === "video" ? "composer-tab composer-tab--active" : "composer-tab"} onClick={() => chooseType("video")}><Video size={16} /> Video</button>
-        </div>
-        {postType === "text" ? <div className="text-post-well"><Feather size={24} /><strong>Give the community a thought to carry</strong><span>Text posts can include hashtags like #art or #fursona.</span></div> : <label className={`upload-well ${preview ? "upload-well--filled" : ""}`}>
-          {preview && postType === "video" ? <video src={preview} controls muted playsInline aria-label="Selected video preview" /> : preview ? <img src={preview} alt="Selected post preview" /> : <><>{postType === "video" ? <Video size={30} /> : <ImagePlus size={30} />}</><strong>{postType === "video" ? "Choose a video to share" : "Choose an image to share"}</strong><span>{postType === "video" ? "MP4, WebM, or MOV · up to 25 MB" : "PNG, JPEG, or WebP · up to 4 MB"}</span></>}
-          <input key={postType} type="file" accept={postType === "video" ? "video/mp4,video/webm,video/quicktime" : "image/png,image/jpeg,image/webp"} onChange={handleFile} />
-        </label>}
-        <label className="field-label">{postType === "text" ? "Your post" : "Caption"}<textarea value={caption} onChange={event => setCaption(event.target.value)} maxLength={2000} placeholder={postType === "text" ? "What is on your mind?" : "Add a few words or tags like #art or #fursona."} /></label>
-        <div className="compose-modal__footer"><span>Public to the Furrio community</span><button className="primary-button" type="submit" disabled={upload.isPending || create.isPending}>{upload.isPending || create.isPending ? "Publishing…" : "Publish post"}<ArrowUpRight size={17} /></button></div>
-      </form>
-    </div>}
-  </>;
+  return <div className="compose-cta" role="region" aria-label="Create a Furrio post">
+    <span className="compose-cta__avatar" aria-hidden="true">{postType === "video" ? <Video size={18} /> : postType === "image" ? <ImagePlus size={18} /> : <Feather size={18} />}</span>
+    <input className="compose-cta__input" type="text" value={inlineText} placeholder={fileData ? `Add a caption for your ${postType}…` : "Share something with the community…"} onChange={event => setInlineText(event.target.value)} onKeyDown={event => { if (event.key === "Enter") { event.preventDefault(); void publish(); } }} aria-label="Write a post or caption" />
+    <div className="compose-cta__tools" aria-label="Post tools">
+      <button type="button" className="compose-tool compose-tool--post" onClick={() => void publish()} aria-label="Publish post" title="Post" disabled={upload.isPending || create.isPending}><Send size={16} /><span>{upload.isPending || create.isPending ? "…" : "Post"}</span></button>
+      <button type="button" className="compose-tool" onClick={() => startMedia("image")} aria-label="Add an image" title="Add image" disabled={upload.isPending || create.isPending}><ImagePlus size={17} /></button>
+      <button type="button" className="compose-tool" onClick={() => startMedia("video")} aria-label="Add a video" title="Add video" disabled={upload.isPending || create.isPending}><Video size={17} /></button>
+    </div>
+    <input ref={imageInputRef} className="visually-hidden-file" type="file" accept="image/png,image/jpeg,image/webp" onChange={handleFile} />
+    <input ref={videoInputRef} className="visually-hidden-file" type="file" accept="video/mp4,video/webm,video/quicktime" onChange={handleFile} />
+  </div>;
 }
 
 function EditProfile({ profile, onClose }: { profile: CreatorProfile; onClose: () => void }) {
