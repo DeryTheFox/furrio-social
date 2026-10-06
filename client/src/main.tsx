@@ -38,6 +38,15 @@ function AuthenticatedApp() {
       }
     }
   }, [error, isLoading]);
+
+  useEffect(() => {
+    if (isLoading || isAuthenticated) return;
+    const hint = new URLSearchParams(window.location.search).get("furrio_auth");
+    if (hint !== "login" && hint !== "signup") return;
+    window.history.replaceState({}, document.title, window.location.pathname + window.location.hash);
+    void loginWithRedirect({ authorizationParams: { screen_hint: hint } });
+  }, [isAuthenticated, isLoading, loginWithRedirect]);
+
   const trpcClient = useMemo(
     () => trpc.createClient({
       links: [

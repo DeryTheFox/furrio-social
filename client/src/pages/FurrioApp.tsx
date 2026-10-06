@@ -27,7 +27,7 @@ import {
 } from "lucide-react";
 import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { getAuth0RedirectOrigin } from "@/const";
+import { FURRIO_ORIGIN, getAuth0RedirectOrigin, isPreviewOrigin } from "@/const";
 
 type Section = "Home" | "Explore" | "Profile";
 
@@ -397,8 +397,15 @@ export default function FurrioApp() {
   const viewTag = (tag: string) => { setSelectedTag(tag); setSelectedProfile(null); setActive("Explore"); };
   const viewProfile = (handle: string) => { setSelectedProfile(handle); setSelectedTag(null); setActive("Profile"); };
   if (authLoading) return <div className="app-loading"><PawPrint size={26} /><span>Entering Furrio</span></div>;
-  const startLogin = () => loginWithRedirect({ authorizationParams: { screen_hint: "login" } });
-  const startJoin = () => loginWithRedirect({ authorizationParams: { screen_hint: "signup" } });
+  const startAuth0 = (screenHint: "login" | "signup") => {
+    if (isPreviewOrigin()) {
+      window.location.assign(`${FURRIO_ORIGIN}/?furrio_auth=${screenHint}`);
+      return;
+    }
+    return loginWithRedirect({ authorizationParams: { screen_hint: screenHint } });
+  };
+  const startLogin = () => startAuth0("login");
+  const startJoin = () => startAuth0("signup");
   const displayName = user?.name || user?.email || "Furrio member";
   return <div className="furrio-app"><Sidebar active={active} onSelect={chooseSection} isAuthenticated={isAuthenticated} onLogin={startLogin} /><main className="main-column"><header className="mobile-header"><button className="wordmark" onClick={() => chooseSection("Home")}><span><PawPrint size={20} /></span>Furrio</button><button className="icon-button" onClick={() => isAuthenticated ? chooseSection("Profile") : startLogin()} aria-label="Open profile"><Avatar label={displayName} size="sm" /></button></header>{active === "Home" && <HomeView isAuthenticated={isAuthenticated} onLogin={startLogin} onTag={viewTag} onProfile={viewProfile} />}{active === "Explore" && <ExploreView isAuthenticated={isAuthenticated} onLogin={startLogin} onTag={viewTag} onProfile={viewProfile} selectedTag={selectedTag} onClearTag={() => setSelectedTag(null)} />}{active === "Profile" && <ProfileView isAuthenticated={isAuthenticated} onLogin={startLogin} handle={selectedProfile} onBack={() => setSelectedProfile(null)} onTag={viewTag} onProfile={viewProfile} />}</main><RightRail creators={creators} tags={tags} isAuthenticated={isAuthenticated} onLogin={startLogin} onProfile={viewProfile} onTag={viewTag} /><div className="account-dock">{isAuthenticated ? <><Avatar label={displayName} size="sm" /><div><strong>{displayName}</strong><small>Signed in</small></div><button className="icon-button" onClick={() => logout({ logoutParams: { returnTo: getAuth0RedirectOrigin() } })} aria-label="Sign out"><LogOut size={17} /></button></> : <button className="primary-button" onClick={startJoin}>Join Furrio <ArrowUpRight size={16} /></button>}</div><nav className="mobile-nav" aria-label="Mobile navigation">{([{ name: "Home", icon: HomeIcon }, { name: "Explore", icon: Compass }, { name: "Profile", icon: UserRound }] as const).map(item => { const Icon = item.icon; return <button key={item.name} className={active === item.name ? "mobile-nav__item mobile-nav__item--active" : "mobile-nav__item"} onClick={() => isAuthenticated || item.name !== "Profile" ? chooseSection(item.name) : startLogin()}><Icon size={19} /><span>{item.name}</span></button>; })}</nav></div>;
 }

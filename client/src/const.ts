@@ -11,6 +11,8 @@ export const FURRIO_ORIGIN = "https://furrisociety-qubyqb6h.manus.space";
 // callback must always use the current origin.
 export const getAuth0RedirectOrigin = () => window.location.origin;
 
+export const isPreviewOrigin = () => window.location.hostname.endsWith(".manus.computer");
+
 // Start the Manus OAuth login. Call this from an event handler or effect at the
 // moment you want to navigate, e.g. `onClick={() => startLogin()}`.
 //
