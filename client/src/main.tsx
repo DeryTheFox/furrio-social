@@ -81,7 +81,7 @@ createRoot(document.getElementById("root")!).render(
     clientId={auth0ClientId}
     cacheLocation="localstorage"
     onRedirectCallback={() => {
-      window.location.replace(FURRIO_ORIGIN);
+      window.history.replaceState({}, document.title, window.location.pathname);
     }}
     authorizationParams={{
       redirect_uri: FURRIO_ORIGIN,
