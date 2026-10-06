@@ -40,3 +40,44 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px
 .page-heading { padding-bottom: 16px; }
 .profile-posts { margin-top: 24px; }
 .post-grid { margin-top: 14px; }
+
+/* Smooth motion layer: subtle entrance, stagger, and tactile interaction feedback. */
+@keyframes furrio-rise-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes furrio-soft-in {
+  from { opacity: 0; transform: translateY(6px) scale(.99); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.main-column > .page-heading,
+.main-column > .profile-hero,
+.main-column > .auth-empty {
+  animation: furrio-rise-in .42s cubic-bezier(.23,1,.32,1) both;
+}
+.main-column > .compose-cta,
+.main-column > .profile-posts,
+.main-column > .explore-feed {
+  animation: furrio-soft-in .46s .06s cubic-bezier(.23,1,.32,1) both;
+}
+.feed-stack > *,
+.post-grid__item,
+.creator-card {
+  animation: furrio-soft-in .42s cubic-bezier(.23,1,.32,1) both;
+}
+.feed-stack > *:nth-child(2), .creator-card:nth-child(2), .post-grid__item:nth-child(2) { animation-delay: .05s; }
+.feed-stack > *:nth-child(3), .creator-card:nth-child(3), .post-grid__item:nth-child(3) { animation-delay: .1s; }
+.feed-stack > *:nth-child(4), .creator-card:nth-child(4), .post-grid__item:nth-child(4) { animation-delay: .15s; }
+.feed-stack > *:nth-child(5), .creator-card:nth-child(5), .post-grid__item:nth-child(5) { animation-delay: .2s; }
+.compose-cta, .primary-button, .secondary-button, .follow-button, .reaction-button, .side-nav__item, .mobile-nav__item, .post-grid__item, .creator-card {
+  transition-timing-function: cubic-bezier(.23,1,.32,1);
+}
+button:active { transform: scale(.97); }
+.compose-cta:active, .primary-button:active, .secondary-button:active, .follow-button:active { transform: scale(.98); }
+.post-grid__item { transition: transform .22s cubic-bezier(.23,1,.32,1), box-shadow .22s ease; }
+.post-grid__item:hover { transform: translateY(-3px); box-shadow: 0 12px 25px rgba(61,47,36,.12); }
+.creator-card { transition: transform .22s cubic-bezier(.23,1,.32,1), box-shadow .22s ease, border-color .22s ease; }
+.creator-card:hover { transform: translateY(-3px); box-shadow: 0 12px 25px rgba(61,47,36,.08); border-color: #d8c8ba; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; }
+}
