@@ -26,21 +26,24 @@ async function authenticateAuth0Request(req: CreateExpressContextOptions["req"])
     const accessResult = await jwtVerify(token, auth0Jwks, { issuer, audience });
     const rawIdentity = req.headers["x-furrio-identity"];
     const identityToken = typeof rawIdentity === "string" ? rawIdentity : null;
-    if (!identityToken) return null;
-    const identityResult = await jwtVerify(identityToken, auth0Jwks, { issuer, audience: clientId });
-    const subject = typeof identityResult.payload.sub === "string" ? identityResult.payload.sub : "";
-    if (accessResult.payload.sub !== subject) return null;
+    let identityClaims = accessResult.payload;
+    if (identityToken) {
+      const identityResult = await jwtVerify(identityToken, auth0Jwks, { issuer, audience: clientId });
+      if (identityResult.payload.sub !== accessResult.payload.sub) return null;
+      identityClaims = identityResult.payload;
+    }
+    const subject = typeof accessResult.payload.sub === "string" ? accessResult.payload.sub : "";
     if (!subject) return null;
 
     // Auth0 database credentials identify with `auth0|...`. Those new accounts
     // must verify their email before accessing protected community actions;
     // subsequent verified sessions do not trigger a new verification flow.
-    if (subject.startsWith("auth0|") && identityResult.payload.email_verified !== true) return null;
+    if (subject.startsWith("auth0|") && identityClaims.email_verified !== true) return null;
 
     await upsertUser({
       openId: subject,
-      name: typeof identityResult.payload.name === "string" ? identityResult.payload.name : null,
-      email: typeof identityResult.payload.email === "string" ? identityResult.payload.email : null,
+      name: typeof identityClaims.name === "string" ? identityClaims.name : null,
+      email: typeof identityClaims.email === "string" ? identityClaims.email : null,
       loginMethod: subject.split("|")[0] || "auth0",
       lastSignedIn: new Date(),
     });
