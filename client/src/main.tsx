@@ -76,7 +76,11 @@ createRoot(document.getElementById("root")!).render(
     onRedirectCallback={() => {
       window.history.replaceState({}, document.title, window.location.pathname);
     }}
-    authorizationParams={{ redirect_uri: window.location.origin }}
+    authorizationParams={{
+      redirect_uri: window.location.origin,
+      audience: import.meta.env.VITE_AUTH0_AUDIENCE,
+      scope: "openid profile email",
+    }}
   >
     <AuthenticatedApp />
   </Auth0Provider>,
