@@ -30,17 +30,20 @@ function AuthenticatedApp() {
           transformer: superjson,
           headers: async () => {
             if (!isAuthenticated) return {};
-            const [accessToken, identityClaims] = await Promise.all([
-              getAccessTokenSilently({
-                authorizationParams: { audience: import.meta.env.VITE_AUTH0_AUDIENCE },
-                cacheMode: "off",
-              }),
-              getIdTokenClaims(),
-            ]);
-            return {
-              Authorization: `Bearer ${accessToken}`,
-              ...(identityClaims?.__raw ? { "X-Furrio-Identity": identityClaims.__raw } : {}),
-            };
+            try {
+              const [accessToken, identityClaims] = await Promise.all([
+                getAccessTokenSilently({ authorizationParams: { audience: import.meta.env.VITE_AUTH0_AUDIENCE } }),
+                getIdTokenClaims(),
+              ]);
+              return {
+                Authorization: `Bearer ${accessToken}`,
+                ...(identityClaims?.__raw ? { "X-Furrio-Identity": identityClaims.__raw } : {}),
+              };
+            } catch {
+              // Public procedures should remain usable when Auth0 needs a fresh session.
+              // Protected procedures will return their normal UNAUTHORIZED error.
+              return {};
+            }
           },
           fetch(input, init) {
             return globalThis.fetch(input, { ...(init ?? {}), credentials: "include" });
