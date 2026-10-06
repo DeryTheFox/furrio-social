@@ -224,6 +224,7 @@ function Composer({ isAuthenticated, onLogin }: { isAuthenticated: boolean; onLo
   const [open, setOpen] = useState(false);
   const [postType, setPostType] = useState<"text" | "image" | "video">("image");
   const [caption, setCaption] = useState("");
+  const [inlineText, setInlineText] = useState("");
   const [preview, setPreview] = useState<string | null>(null);
   const [fileData, setFileData] = useState<string | null>(null);
   const utils = trpc.useUtils();
@@ -233,6 +234,7 @@ function Composer({ isAuthenticated, onLogin }: { isAuthenticated: boolean; onLo
       setOpen(false);
       setPostType("image");
       setCaption("");
+      setInlineText("");
       setPreview(null);
       setFileData(null);
       utils.social.home.invalidate();
@@ -243,9 +245,10 @@ function Composer({ isAuthenticated, onLogin }: { isAuthenticated: boolean; onLo
     },
     onError: error => toast.error(error.message),
   });
-  const openComposer = (type: "text" | "image" | "video") => {
+  const openComposer = (type: "text" | "image" | "video", initialText = "") => {
     if (!isAuthenticated) return onLogin();
     setPostType(type);
+    if (type === "text" && initialText) setCaption(initialText);
     setOpen(true);
   };
   const chooseType = (nextType: "text" | "image" | "video") => {
@@ -282,7 +285,7 @@ function Composer({ isAuthenticated, onLogin }: { isAuthenticated: boolean; onLo
     }
   };
   return <>
-    <div className="compose-cta" role="region" aria-label="Create a Furrio post"><span className="compose-cta__avatar" aria-hidden="true"><Feather size={18} /></span><input className="compose-cta__input" type="text" placeholder="Share something with the community…" readOnly onFocus={() => openComposer("text")} onClick={() => openComposer("text")} aria-label="Share something with the community" /><div className="compose-cta__tools" aria-label="Post tools"><button type="button" className="compose-tool" onClick={() => openComposer("text")} aria-label="Create a text post" title="Text post"><Feather size={17} /></button><button type="button" className="compose-tool" onClick={() => openComposer("image")} aria-label="Create an image post" title="Image post"><ImagePlus size={17} /></button><button type="button" className="compose-tool" onClick={() => openComposer("video")} aria-label="Create a video post" title="Video post"><Video size={17} /></button></div></div>
+    <div className="compose-cta" role="region" aria-label="Create a Furrio post"><span className="compose-cta__avatar" aria-hidden="true"><Feather size={18} /></span><input className="compose-cta__input" type="text" value={inlineText} placeholder="Share something with the community…" onChange={event => setInlineText(event.target.value)} onKeyDown={event => { if (event.key === "Enter" && inlineText.trim()) { event.preventDefault(); openComposer("text", inlineText.trim()); } }} aria-label="Share something with the community" /><div className="compose-cta__tools" aria-label="Post tools"><button type="button" className="compose-tool" onClick={() => openComposer("text", inlineText.trim())} aria-label="Create a text post" title="Text post"><Feather size={17} /></button><button type="button" className="compose-tool" onClick={() => openComposer("image")} aria-label="Create an image post" title="Image post"><ImagePlus size={17} /></button><button type="button" className="compose-tool" onClick={() => openComposer("video")} aria-label="Create a video post" title="Video post"><Video size={17} /></button></div></div>
     {open && <div className="modal-layer" role="dialog" aria-modal="true" aria-label="Create a post">
       <form className="compose-modal" onSubmit={publish}>
         <div className="drawer-heading"><div><span className="eyebrow">New post</span><h2>Share something vivid</h2></div><button className="icon-button" type="button" onClick={() => setOpen(false)} aria-label="Close post composer"><X size={20} /></button></div>
