@@ -78,6 +78,16 @@ describe("Furrio social procedures", () => {
     expect(db.insert).toHaveBeenCalledTimes(1);
   });
 
+  it("removes the persisted like when the member has already liked the post", async () => {
+    const db = createFakeDb([[{ id: 23 }], [{ userId: 7, postId: 23 }]]);
+    vi.mocked(requireDb).mockResolvedValue(db as never);
+
+    const result = await appRouter.createCaller(createContext()).social.toggleLike({ postId: 23 });
+
+    expect(result).toEqual({ liked: false });
+    expect(db.delete).toHaveBeenCalledTimes(1);
+  });
+
   it("creates a comment only after verifying the post target", async () => {
     const db = createFakeDb([[{ id: 41 }]]);
     vi.mocked(requireDb).mockResolvedValue(db as never);

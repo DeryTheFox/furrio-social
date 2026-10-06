@@ -139,10 +139,18 @@ function FollowButton({ creator, isAuthenticated, onLogin }: { creator: CreatorC
 function PostCard({ post, isAuthenticated, onLogin, onTag, onProfile }: { post: FurrioPost; isAuthenticated: boolean; onLogin: () => void; onTag: (tag: string) => void; onProfile: (handle: string) => void }) {
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [comment, setComment] = useState("");
+  const [liked, setLiked] = useState(post.likedByViewer);
+  const [likeCount, setLikeCount] = useState(post.likeCount);
   const utils = trpc.useUtils();
+  useEffect(() => {
+    setLiked(post.likedByViewer);
+    setLikeCount(post.likeCount);
+  }, [post.likedByViewer, post.likeCount]);
   const commentsQuery = trpc.social.comments.useQuery({ postId: post.id }, { enabled: commentsOpen });
   const like = trpc.social.toggleLike.useMutation({
-    onSuccess: () => {
+    onSuccess: result => {
+      setLiked(result.liked);
+      setLikeCount(current => Math.max(0, current + (result.liked ? 1 : -1)));
       utils.social.home.invalidate();
       utils.social.explore.invalidate();
       utils.social.mine.invalidate();
@@ -186,9 +194,9 @@ function PostCard({ post, isAuthenticated, onLogin, onTag, onProfile }: { post: 
       {post.mediaType === "video" && post.imageUrl && <div className="post-card__media"><video src={post.imageUrl} controls playsInline preload="metadata" aria-label={post.caption || `Video by ${post.author.displayName}`} /></div>}
       {post.mediaType === "text" && <div className="post-card__text"><Feather size={20} /><p>{post.caption}</p></div>}
       <div className="post-card__actions">
-        <button className={post.likedByViewer ? "reaction-button reaction-button--liked" : "reaction-button"} onClick={() => (isAuthenticated ? like.mutate({ postId: post.id }) : onLogin())} disabled={like.isPending} aria-label="Like post">
-          <Heart size={20} fill={post.likedByViewer ? "currentColor" : "none"} />
-          <span>{formatCount(post.likeCount)}</span>
+        <button className={liked ? "reaction-button reaction-button--liked" : "reaction-button"} onClick={() => (isAuthenticated ? like.mutate({ postId: post.id }) : onLogin())} disabled={like.isPending} aria-label={liked ? "Unlike post" : "Like post"} aria-pressed={liked}>
+          <Heart size={20} fill={liked ? "currentColor" : "none"} />
+          <span>{formatCount(likeCount)}</span>
         </button>
         <button className="reaction-button" onClick={() => setCommentsOpen(true)} aria-label="Open comments"><MessageCircle size={20} /><span>{formatCount(post.commentCount)}</span></button>
         <button className="reaction-button reaction-button--share" onClick={() => toast.message("Sharing controls are being prepared for Furrio.")} aria-label="Share post"><Send size={19} /></button>
