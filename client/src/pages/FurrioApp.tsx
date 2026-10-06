@@ -6,7 +6,6 @@ import {
   AtSign,
   Bookmark,
   Check,
-  ChevronRight,
   Compass,
   Feather,
   Heart,
@@ -244,6 +243,11 @@ function Composer({ isAuthenticated, onLogin }: { isAuthenticated: boolean; onLo
     },
     onError: error => toast.error(error.message),
   });
+  const openComposer = (type: "text" | "image" | "video") => {
+    if (!isAuthenticated) return onLogin();
+    setPostType(type);
+    setOpen(true);
+  };
   const chooseType = (nextType: "text" | "image" | "video") => {
     setPostType(nextType);
     setPreview(null);
@@ -278,7 +282,7 @@ function Composer({ isAuthenticated, onLogin }: { isAuthenticated: boolean; onLo
     }
   };
   return <>
-    <button className="compose-cta" onClick={() => (isAuthenticated ? setOpen(true) : onLogin())}><span><ImagePlus size={19} /></span><span><strong>Share a creation</strong><small>Post a thought, image, or video</small></span><ChevronRight size={18} /></button>
+    <div className="compose-cta" role="region" aria-label="Create a Furrio post"><button className="compose-cta__prompt" onClick={() => openComposer("text")}><span className="compose-cta__avatar"><Feather size={18} /></span><span><strong>Share something with the community…</strong><small>Tell a story, show your work, or share a moment</small></span></button><div className="compose-cta__tools" aria-label="Post tools"><button type="button" className="compose-tool" onClick={() => openComposer("text")} aria-label="Create a text post" title="Text post"><Feather size={17} /></button><button type="button" className="compose-tool" onClick={() => openComposer("image")} aria-label="Create an image post" title="Image post"><ImagePlus size={17} /></button><button type="button" className="compose-tool" onClick={() => openComposer("video")} aria-label="Create a video post" title="Video post"><Video size={17} /></button></div></div>
     {open && <div className="modal-layer" role="dialog" aria-modal="true" aria-label="Create a post">
       <form className="compose-modal" onSubmit={publish}>
         <div className="drawer-heading"><div><span className="eyebrow">New post</span><h2>Share something vivid</h2></div><button className="icon-button" type="button" onClick={() => setOpen(false)} aria-label="Close post composer"><X size={20} /></button></div>

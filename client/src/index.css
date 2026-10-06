@@ -103,3 +103,21 @@ button:active { transform: scale(.97); }
   .composer-tab { font-size: 10px; padding-inline: 5px; }
   .post-card__text p { font-size: 19px; }
 }
+
+/* Inline share bar */
+.compose-cta { padding: 8px 10px 8px 12px; gap: 10px; }
+.compose-cta__prompt { min-width: 0; flex: 1; display: flex; align-items: center; gap: 11px; border: 0; padding: 5px 4px; text-align: left; color: #25211e; background: transparent; cursor: pointer; }
+.compose-cta__prompt > span:last-child { min-width: 0; display: grid; gap: 2px; }
+.compose-cta__prompt strong, .compose-cta__prompt small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.compose-cta__prompt strong { font-size: 14px; }
+.compose-cta__prompt small { color: #8a837a; font-size: 12px; }
+.compose-cta__avatar { flex: 0 0 38px; width: 38px; height: 38px; display: grid; place-items: center; border-radius: 12px; color: #b65a43; background: #fae8e1; }
+.compose-cta__tools { display: flex; align-items: center; gap: 4px; padding-left: 10px; border-left: 1px solid #eee5dc; }
+.compose-tool { width: 34px; height: 34px; display: grid; place-items: center; border: 0; border-radius: 10px; color: #8b6a5e; background: transparent; cursor: pointer; transition: color .18s ease, background .18s ease, transform .18s ease; }
+.compose-tool:hover { color: #a65340; background: #fff0eb; transform: translateY(-1px); }
+@media (max-width: 500px) {
+  .compose-cta { align-items: stretch; }
+  .compose-cta__prompt small { display: none; }
+  .compose-cta__tools { padding-left: 6px; }
+  .compose-tool { width: 30px; height: 34px; }
+}
