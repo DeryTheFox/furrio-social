@@ -31,7 +31,10 @@ function AuthenticatedApp() {
           headers: async () => {
             if (!isAuthenticated) return {};
             const [accessToken, identityClaims] = await Promise.all([
-              getAccessTokenSilently({ authorizationParams: { audience: import.meta.env.VITE_AUTH0_AUDIENCE } }),
+              getAccessTokenSilently({
+                authorizationParams: { audience: import.meta.env.VITE_AUTH0_AUDIENCE },
+                cacheMode: "off",
+              }),
               getIdTokenClaims(),
             ]);
             return {

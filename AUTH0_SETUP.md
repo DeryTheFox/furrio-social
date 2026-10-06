@@ -5,9 +5,9 @@ Furrio uses an **Auth0 Single Page Web Application** for persistent browser sess
 | Setting | Current preview value | Production value |
 |---|---|---|
 | Application type | Single Page Web Application | Single Page Web Application |
-| Allowed Callback URLs | `https://3000-itqxi3se9fynvgle8pdrv-35966b9e.us1.manus.computer` | Add the published Furrio origin, without a trailing slash. |
-| Allowed Logout URLs | `https://3000-itqxi3se9fynvgle8pdrv-35966b9e.us1.manus.computer` | Add the published Furrio origin, without a trailing slash. |
-| Allowed Web Origins | `https://3000-itqxi3se9fynvgle8pdrv-35966b9e.us1.manus.computer` | Add the published Furrio origin, without a trailing slash. |
+| Allowed Callback URLs | `https://3000-itqxi3se9fynvgle8pdrv-35966b9e.us1.manus.computer` and `https://furrisociety-qubyqb6h.manus.space` | Add the published Furrio origin, without a trailing slash. |
+| Allowed Logout URLs | `https://3000-itqxi3se9fynvgle8pdrv-35966b9e.us1.manus.computer` and `https://furrisociety-qubyqb6h.manus.space` | Add the published Furrio origin, without a trailing slash. |
+| Allowed Web Origins | `https://3000-itqxi3se9fynvgle8pdrv-35966b9e.us1.manus.computer` and `https://furrisociety-qubyqb6h.manus.space` | Add the published Furrio origin, without a trailing slash. |
 | API Identifier | `https://api.furrio.app` | Keep this identifier stable. |
 
 > **Do not use** Auth0’s Management API identifier (`https://YOUR_TENANT.auth0.com/api/v2/`) as the Furrio browser audience. It grants management-oriented access and is not the dedicated API Furrio uses for community actions.
