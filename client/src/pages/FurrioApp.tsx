@@ -294,7 +294,7 @@ function Composer({ isAuthenticated, onLogin }: { isAuthenticated: boolean; onLo
   };
   return <div className="compose-cta" role="region" aria-label="Create a Furrio post">
     <span className="compose-cta__avatar" aria-hidden="true">{postType === "video" ? <Video size={18} /> : postType === "image" ? <ImagePlus size={18} /> : <Feather size={18} />}</span>
-    <input className="compose-cta__input" type="text" value={inlineText} placeholder={fileData ? `Add a caption for your ${postType}…` : "Share something with the community…"} onChange={event => setInlineText(event.target.value)} onKeyDown={event => { if (event.key === "Enter") { event.preventDefault(); void publish(); } }} aria-label="Write a post or caption" />
+    <input className="compose-cta__input" type="text" value={inlineText} placeholder={fileData ? `Add a caption for your ${postType}…` : "Share something…"} onChange={event => setInlineText(event.target.value)} onKeyDown={event => { if (event.key === "Enter") { event.preventDefault(); void publish(); } }} aria-label="Write a post or caption" />
     <div className="compose-cta__tools" aria-label="Post tools">
       <button type="button" className="compose-tool compose-tool--post" onClick={() => void publish()} aria-label="Publish post" title="Post" disabled={upload.isPending || create.isPending}><Send size={16} /><span>{upload.isPending || create.isPending ? "…" : "Post"}</span></button>
       <button type="button" className="compose-tool" onClick={() => startMedia("image")} aria-label="Add an image" title="Add image" disabled={upload.isPending || create.isPending}><ImagePlus size={17} /></button>

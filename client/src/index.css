@@ -177,3 +177,67 @@ button:active { transform: scale(.97); }
 .reaction-button--like svg { animation: furrio-heart-pop .46s cubic-bezier(.23,1,.32,1) both; }
 .reaction-button--unlike svg { animation: furrio-heart-unlike .3s cubic-bezier(.23,1,.32,1) both; }
 .reaction-button--like span, .reaction-button--unlike span { animation: furrio-count-pop .28s cubic-bezier(.23,1,.32,1) both; }
+
+
+/* Mobile quality pass: keep every primary action comfortable at phone widths. */
+@media (max-width: 760px) {
+  html, body { overflow-x: hidden; }
+  .furrio-app { width: 100%; max-width: none; padding: 0 12px calc(98px + env(safe-area-inset-bottom)); }
+  .main-column { width: 100%; max-width: 620px; }
+  .mobile-header { height: 64px; }
+  .page-heading { padding: 14px 4px 18px; gap: 12px; }
+  .page-heading h1, .page-heading h2 { font-size: clamp(30px, 8.5vw, 38px); letter-spacing: -1.2px; }
+  .page-heading p { max-width: 285px; line-height: 1.4; }
+  .compose-cta { width: 100%; min-width: 0; gap: 6px; }
+  .compose-cta__avatar { flex-basis: 32px; width: 32px; height: 32px; border-radius: 10px; }
+  .compose-cta__input { min-width: 0; font-size: 13px; }
+  .compose-cta__tools { flex: 0 0 auto; gap: 2px; padding-left: 5px; }
+  .compose-tool { width: 32px; }
+  .compose-tool--post { min-width: 38px; padding-inline: 8px; }
+  .post-card { border-radius: 16px; }
+  .post-card__header { padding: 12px 12px; }
+  .post-card__actions { gap: 2px; padding: 9px 10px 4px; }
+  .reaction-button { padding: 8px 6px; gap: 4px; }
+  .post-card__copy { padding: 0 14px 14px; }
+  .post-card__text { padding: 18px 14px 5px; }
+  .post-card__text p { font-size: clamp(16px, 4.8vw, 19px); line-height: 1.48; }
+  .post-comments { margin-inline: 10px; }
+  .post-comments__heading { padding-inline: 11px; }
+  .post-comments__body { padding: 11px; }
+  .profile-hero { padding: 18px; }
+  .profile-hero__top { flex-wrap: wrap; gap: 13px; }
+  .profile-hero__actions { max-width: 100%; }
+  .profile-hero__actions .secondary-button { min-height: 35px; padding: 8px 10px; font-size: 11px; }
+  .profile-hero__identity h2 { font-size: clamp(26px, 7vw, 31px); }
+  .profile-bio { margin-top: 12px; }
+  .profile-stats { justify-content: space-between; gap: 9px; }
+  .profile-posts { margin-top: 25px; }
+  .modal-layer { align-items: end; padding: 8px; }
+  .compose-modal, .profile-editor { width: 100%; max-height: calc(100dvh - 16px); padding: 16px; border-radius: 17px; }
+  .comment-drawer { width: 100%; max-height: calc(100dvh - 16px); }
+}
+
+@media (max-width: 380px) {
+  .furrio-app { padding-inline: 10px; }
+  .mobile-header { height: 60px; }
+  .mobile-header .wordmark { font-size: 21px; }
+  .mobile-header .wordmark > span { width: 30px; height: 30px; }
+  .compose-cta__avatar { display: none; }
+  .compose-cta__input { font-size: 12px; }
+  .compose-cta__tools { padding-left: 3px; }
+  .compose-tool { width: 29px; }
+  .compose-tool--post { min-width: 35px; padding-inline: 6px; }
+  .post-card__header { padding-inline: 10px; }
+  .post-card__actions { padding-inline: 8px; }
+  .profile-hero { padding: 15px; }
+  .profile-stats { font-size: 10px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mobile-nav, .compose-cta, .post-card { transition: none; }
+}
+
+
+@media (max-width: 760px) {
+  .mobile-nav { bottom: calc(12px + env(safe-area-inset-bottom)); }
+}
