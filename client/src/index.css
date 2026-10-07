@@ -146,3 +146,5 @@ button:active { transform: scale(.97); }
 .post-comments .comment-form { border-top: 1px solid #eee4da; padding: 10px; background: #fffdf9; }
 @keyframes comment-section-in { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
 @media (prefers-reduced-motion: reduce) { .post-comments { animation: none; } }
+
+.reaction-button--active { color: #b65a43; background: #fff3ef; }

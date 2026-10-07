@@ -198,7 +198,7 @@ function PostCard({ post, isAuthenticated, onLogin, onTag, onProfile }: { post: 
           <Heart size={20} fill={liked ? "currentColor" : "none"} />
           <span>{formatCount(likeCount)}</span>
         </button>
-        <button className="reaction-button" onClick={() => setCommentsOpen(true)} aria-label="Open comments"><MessageCircle size={20} /><span>{formatCount(post.commentCount)}</span></button>
+        <button className={commentsOpen ? "reaction-button reaction-button--active" : "reaction-button"} onClick={() => setCommentsOpen(open => !open)} aria-label={commentsOpen ? "Hide comments" : "Show comments"} aria-expanded={commentsOpen} aria-controls={`comments-${post.id}`}><MessageCircle size={20} /><span>{formatCount(post.commentCount)}</span></button>
         <button className="reaction-button reaction-button--share" onClick={() => toast.message("Sharing controls are being prepared for Furrio.")} aria-label="Share post"><Send size={19} /></button>
         <button className="reaction-button reaction-button--share" onClick={() => toast.message("Saved collections are coming soon.")} aria-label="Save post"><Bookmark size={19} /></button>
       </div>
@@ -207,7 +207,7 @@ function PostCard({ post, isAuthenticated, onLogin, onTag, onProfile }: { post: 
         {post.tags.length > 0 && <div className="tag-row">{post.tags.map(tag => <button key={tag} onClick={() => onTag(tag)}>#{tag}</button>)}</div>}
       </div>}
 
-      {commentsOpen && <section className="post-comments" aria-label="Post comments">
+      {commentsOpen && <section id={`comments-${post.id}`} className="post-comments" aria-label="Post comments">
         <div className="post-comments__heading"><div><span className="eyebrow">Conversation</span><strong>Comments</strong></div><button className="text-button" type="button" onClick={() => setCommentsOpen(false)}>Hide</button></div>
         <div className="post-comments__body">
           {commentsQuery.isLoading && <LoadingTile rows={3} />}
