@@ -207,7 +207,7 @@ function PostCard({ post, isAuthenticated, onLogin, onTag, onProfile }: { post: 
         {post.tags.length > 0 && <div className="tag-row">{post.tags.map(tag => <button key={tag} onClick={() => onTag(tag)}>#{tag}</button>)}</div>}
       </div>}
 
-      {commentsOpen && <section id={`comments-${post.id}`} className="post-comments" aria-label="Post comments">
+      <section id={`comments-${post.id}`} className={`post-comments ${commentsOpen ? "post-comments--open" : "post-comments--closed"}`} aria-label="Post comments" aria-hidden={!commentsOpen}>
         <div className="post-comments__heading"><div><span className="eyebrow">Conversation</span><strong>Comments</strong></div><button className="text-button" type="button" onClick={() => setCommentsOpen(false)}>Hide</button></div>
         <div className="post-comments__body">
           {commentsQuery.isLoading && <LoadingTile rows={3} />}
@@ -221,7 +221,7 @@ function PostCard({ post, isAuthenticated, onLogin, onTag, onProfile }: { post: 
           <input value={comment} onChange={event => setComment(event.target.value)} placeholder={isAuthenticated ? "Add something thoughtful…" : "Sign in to leave a comment"} disabled={addComment.isPending} maxLength={1000} />
           <button type="submit" className="send-button" aria-label="Submit comment" disabled={addComment.isPending}><ArrowUpRight size={19} /></button>
         </form>
-      </section>}
+      </section>
     </article>
   );
 }
