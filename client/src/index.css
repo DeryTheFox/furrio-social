@@ -170,3 +170,10 @@ button:active { transform: scale(.97); }
 .rail-link:hover, .text-button:hover { color: #b65a43; transform: translateX(2px); }
 .tag-row button:hover, .trail-tags button:hover { background: #fff0eb; transform: translateY(-1px); }
 .primary-button:active, .secondary-button:active, .reaction-button:active, .send-button:active { transform: scale(.96); }
+
+@keyframes furrio-heart-pop { 0% { transform: scale(1); } 38% { transform: scale(1.42) rotate(-7deg); } 68% { transform: scale(.88) rotate(4deg); } 100% { transform: scale(1); } }
+@keyframes furrio-heart-unlike { 0% { transform: scale(1); } 45% { transform: scale(.74); } 100% { transform: scale(1); } }
+@keyframes furrio-count-pop { 0% { opacity: .55; transform: translateY(3px); } 100% { opacity: 1; transform: translateY(0); } }
+.reaction-button--like svg { animation: furrio-heart-pop .46s cubic-bezier(.23,1,.32,1) both; }
+.reaction-button--unlike svg { animation: furrio-heart-unlike .3s cubic-bezier(.23,1,.32,1) both; }
+.reaction-button--like span, .reaction-button--unlike span { animation: furrio-count-pop .28s cubic-bezier(.23,1,.32,1) both; }

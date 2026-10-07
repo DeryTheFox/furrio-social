@@ -141,6 +141,7 @@ function PostCard({ post, isAuthenticated, onLogin, onTag, onProfile }: { post: 
   const [comment, setComment] = useState("");
   const [liked, setLiked] = useState(post.likedByViewer);
   const [likeCount, setLikeCount] = useState(post.likeCount);
+  const [likeAnimation, setLikeAnimation] = useState<"like" | "unlike" | "">("");
   const utils = trpc.useUtils();
   useEffect(() => {
     setLiked(post.likedByViewer);
@@ -148,16 +149,30 @@ function PostCard({ post, isAuthenticated, onLogin, onTag, onProfile }: { post: 
   }, [post.likedByViewer, post.likeCount]);
   const commentsQuery = trpc.social.comments.useQuery({ postId: post.id }, { enabled: commentsOpen });
   const like = trpc.social.toggleLike.useMutation({
+    onMutate: () => {
+      const previous = { liked, likeCount };
+      const nextLiked = !liked;
+      setLiked(nextLiked);
+      setLikeCount(current => Math.max(0, current + (nextLiked ? 1 : -1)));
+      setLikeAnimation(nextLiked ? "like" : "unlike");
+      return previous;
+    },
     onSuccess: result => {
       setLiked(result.liked);
-      setLikeCount(current => Math.max(0, current + (result.liked ? 1 : -1)));
       utils.social.home.invalidate();
       utils.social.explore.invalidate();
       utils.social.mine.invalidate();
       utils.social.profile.invalidate();
       utils.social.hashtag.invalidate();
     },
-    onError: error => toast.error(error.message),
+    onError: (error, _input, context) => {
+      if (context) {
+        setLiked(context.liked);
+        setLikeCount(context.likeCount);
+      }
+      setLikeAnimation("");
+      toast.error(error.message);
+    },
   });
   const addComment = trpc.social.addComment.useMutation({
     onSuccess: () => {
@@ -194,7 +209,7 @@ function PostCard({ post, isAuthenticated, onLogin, onTag, onProfile }: { post: 
       {post.mediaType === "video" && post.imageUrl && <div className="post-card__media"><video src={post.imageUrl} controls playsInline preload="metadata" aria-label={post.caption || `Video by ${post.author.displayName}`} /></div>}
       {post.mediaType === "text" && <div className="post-card__text"><Feather size={20} /><p>{post.caption}</p></div>}
       <div className="post-card__actions">
-        <button className={liked ? "reaction-button reaction-button--liked" : "reaction-button"} onClick={() => (isAuthenticated ? like.mutate({ postId: post.id }) : onLogin())} disabled={like.isPending} aria-label={liked ? "Unlike post" : "Like post"} aria-pressed={liked}>
+        <button className={`reaction-button ${liked ? "reaction-button--liked" : ""} ${likeAnimation ? `reaction-button--${likeAnimation}` : ""}`} onClick={() => (isAuthenticated ? like.mutate({ postId: post.id }) : onLogin())} disabled={like.isPending} aria-label={liked ? "Unlike post" : "Like post"} aria-pressed={liked}>
           <Heart size={20} fill={liked ? "currentColor" : "none"} />
           <span>{formatCount(likeCount)}</span>
         </button>
