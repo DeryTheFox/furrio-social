@@ -1,8 +1,10 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { Suspense, lazy } from "react";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
-import FurrioApp from "./pages/FurrioApp";
+
+const FurrioApp = lazy(() => import("./pages/FurrioApp"));
 
 function App() {
   return (
@@ -10,7 +12,9 @@ function App() {
       <ThemeProvider defaultTheme="light">
         <TooltipProvider>
           <Toaster richColors position="top-center" />
-          <FurrioApp />
+          <Suspense fallback={<main className="app-loading" aria-label="Loading Furrio"><span className="app-loading__mark">✦</span><span>Loading Furrio…</span></main>}>
+            <FurrioApp />
+          </Suspense>
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>

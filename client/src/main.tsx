@@ -9,7 +9,16 @@ import App from "./App";
 import { getAuth0RedirectOrigin } from "./const";
 import "./index.css";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 30_000,
+      gcTime: 5 * 60_000,
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
 function AuthenticatedApp() {
   const { error, getIdTokenClaims, isAuthenticated, isLoading, loginWithRedirect } = useAuth0();
