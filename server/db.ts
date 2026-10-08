@@ -10,6 +10,7 @@ import {
   profiles,
   type InsertUser,
   type User,
+  userIdentities,
   users,
 } from "../drizzle/schema";
 import { ENV } from "./_core/env";
@@ -64,6 +65,60 @@ export async function getUserByOpenId(openId: string) {
   if (!db) return undefined;
   const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
   return result[0];
+}
+
+export function normalizeAuthEmail(email: string | null | undefined) {
+  const normalized = email?.trim().toLowerCase();
+  return normalized || null;
+}
+
+export async function getOrLinkAuth0User(input: InsertUser & { emailVerified: boolean }) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const email = normalizeAuthEmail(input.email);
+  const identity = await db
+    .select({ userId: userIdentities.userId })
+    .from(userIdentities)
+    .where(eq(userIdentities.providerSubject, input.openId))
+    .limit(1);
+
+  let target: User | undefined;
+  if (identity[0]) {
+    const existing = await db.select().from(users).where(eq(users.id, identity[0].userId)).limit(1);
+    target = existing[0];
+  }
+  if (!target) target = await getUserByOpenId(input.openId);
+  if (!target && email && input.emailVerified) {
+    const sameEmail = await db
+      .select()
+      .from(users)
+      .where(sql`lower(${users.email}) = ${email}`)
+      .orderBy(users.id)
+      .limit(1);
+    target = sameEmail[0];
+  }
+
+  if (!target) {
+    await upsertUser({ openId: input.openId, name: input.name, email, loginMethod: input.loginMethod, lastSignedIn: input.lastSignedIn });
+    target = await getUserByOpenId(input.openId);
+  } else {
+    await db
+      .update(users)
+      .set({ name: input.name ?? null, email: email ?? target.email, lastSignedIn: input.lastSignedIn ?? new Date() })
+      .where(eq(users.id, target.id));
+  }
+  if (!target) return undefined;
+
+  // Preserve the original canonical user row while linking every verified provider subject to it.
+  await db
+    .insert(userIdentities)
+    .values({ userId: target.id, providerSubject: target.openId, provider: target.loginMethod || "auth0" })
+    .onDuplicateKeyUpdate({ set: { provider: target.loginMethod || "auth0" } });
+  await db
+    .insert(userIdentities)
+    .values({ userId: target.id, providerSubject: input.openId, provider: input.loginMethod || "auth0" })
+    .onDuplicateKeyUpdate({ set: { provider: input.loginMethod || "auth0" } });
+  return (await db.select().from(users).where(eq(users.id, target.id)).limit(1))[0];
 }
 
 export function normalizeHandle(value: string) {

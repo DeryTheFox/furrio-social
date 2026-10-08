@@ -1,7 +1,7 @@
 import type { CreateExpressContextOptions } from "@trpc/server/adapters/express";
 import { createRemoteJWKSet, jwtVerify } from "jose";
 import type { User } from "../../drizzle/schema";
-import { getUserByOpenId, upsertUser } from "../db";
+import { getOrLinkAuth0User } from "../db";
 import { sdk } from "./sdk";
 
 export type TrpcContext = {
@@ -34,19 +34,20 @@ async function authenticateAuth0Request(req: CreateExpressContextOptions["req"])
     const subject = typeof accessResult.payload.sub === "string" ? accessResult.payload.sub : "";
     if (!subject) return null;
 
+    const emailVerified = identityClaims.email_verified === true || identityClaims.email_verified === "true";
     // Auth0 database credentials identify with `auth0|...`. Those new accounts
     // must verify their email before accessing protected community actions;
     // subsequent verified sessions do not trigger a new verification flow.
-    if (subject.startsWith("auth0|") && identityClaims.email_verified !== true) return null;
+    if (subject.startsWith("auth0|") && !emailVerified) return null;
 
-    await upsertUser({
+    return (await getOrLinkAuth0User({
       openId: subject,
       name: typeof identityClaims.name === "string" ? identityClaims.name : null,
       email: typeof identityClaims.email === "string" ? identityClaims.email : null,
       loginMethod: subject.split("|")[0] || "auth0",
       lastSignedIn: new Date(),
-    });
-    return (await getUserByOpenId(subject)) ?? null;
+      emailVerified,
+    })) ?? null;
   } catch {
     return null;
   }

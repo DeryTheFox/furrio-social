@@ -22,6 +22,20 @@ export const users = mysqlTable("users", {
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
 });
 
+export const userIdentities = mysqlTable(
+  "userIdentities",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    userId: int("userId")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    providerSubject: varchar("providerSubject", { length: 255 }).notNull().unique(),
+    provider: varchar("provider", { length: 64 }).notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  table => [index("userIdentities_user_idx").on(table.userId)],
+);
+
 export const profiles = mysqlTable(
   "profiles",
   {
