@@ -336,3 +336,17 @@ button:active { transform: scale(.97); }
 @media (prefers-reduced-motion: reduce) {
   .mobile-nav::before, .mobile-nav::after { transition: none; }
 }
+
+
+/* Frosted glass treatment on the mobile bottom bar itself. */
+@media (max-width: 760px) {
+  .mobile-nav {
+    background: rgba(38, 33, 29, .72);
+    -webkit-backdrop-filter: blur(18px) saturate(135%);
+    backdrop-filter: blur(18px) saturate(135%);
+    border-color: rgba(255, 250, 244, .2);
+  }
+  .mobile-nav__item--active {
+    background: linear-gradient(145deg, rgba(112, 91, 78, .88), rgba(76, 63, 54, .9));
+  }
+}
