@@ -458,3 +458,24 @@ button:active { transform: scale(.97); }
 @media (prefers-reduced-motion: reduce) {
   .mobile-nav__glider, .mobile-nav__icon, .mobile-nav__item span:last-child { transition: none; }
 }
+
+
+/* Fix tab alignment: position the shared pill relative to the nav container, not its own width. */
+@media (max-width: 760px) {
+  .mobile-nav__glider {
+    left: 5px;
+    transform: none !important;
+    transition: left .52s cubic-bezier(.22,1.25,.36,1), background .25s ease, box-shadow .25s ease;
+    will-change: left;
+  }
+  .mobile-nav--explore .mobile-nav__glider {
+    left: calc(5px + (100% - 16px) / 3 + 3px);
+  }
+  .mobile-nav--profile .mobile-nav__glider {
+    left: calc(5px + 2 * ((100% - 16px) / 3 + 3px));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mobile-nav__glider { transition: none; }
+}
