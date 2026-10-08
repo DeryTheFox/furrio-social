@@ -350,3 +350,30 @@ button:active { transform: scale(.97); }
     background: linear-gradient(145deg, rgba(112, 91, 78, .88), rgba(76, 63, 54, .9));
   }
 }
+
+
+/* Content-aware glass: the bar and its fade sample the pixels beneath them. */
+@media (max-width: 760px) {
+  .mobile-nav {
+    background: rgba(38, 33, 29, .58);
+    -webkit-backdrop-filter: blur(20px) saturate(145%) contrast(105%);
+    backdrop-filter: blur(20px) saturate(145%) contrast(105%);
+  }
+  .mobile-nav::before {
+    background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,.025) 32%, rgba(255,255,255,.07) 76%, rgba(255,255,255,.1));
+    -webkit-backdrop-filter: blur(22px) saturate(125%);
+    backdrop-filter: blur(22px) saturate(125%);
+  }
+  .mobile-nav::after {
+    background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,.035) 48%, rgba(255,255,255,.08));
+    -webkit-backdrop-filter: blur(11px) saturate(120%);
+    backdrop-filter: blur(11px) saturate(120%);
+  }
+}
+
+@supports not ((backdrop-filter: blur(1px))) {
+  @media (max-width: 760px) {
+    .mobile-nav { background: rgba(38, 33, 29, .92); }
+    .mobile-nav::before, .mobile-nav::after { display: none; }
+  }
+}
